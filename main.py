@@ -27,6 +27,7 @@ def main():
     source_group = parser.add_mutually_exclusive_group(required=True)
     source_group.add_argument("--repo", help="URL of the public GitHub repository.")
     source_group.add_argument("--dir", help="Path to local directory.")
+    source_group.add_argument("--file", help="Path to a single input file (e.g., PDF or other document).")
 
     parser.add_argument("-n", "--name", help="Project name (optional, derived from repo/directory if omitted).")
     parser.add_argument("-t", "--token", help="GitHub personal access token (optional, reads from GITHUB_TOKEN env var if not provided).")
@@ -49,6 +50,7 @@ def main():
     # Initialize the shared dictionary with inputs
     shared = {
         "repo_url": args.repo,
+        "single_file": args.file,
         "local_dir": args.dir,
         "project_name": args.name, # Can be None, FetchRepo will derive it
         "github_token": github_token,
@@ -77,8 +79,29 @@ def main():
     # Create the flow instance
     tutorial_flow = create_tutorial_flow()
 
-    # Run the flow
-    tutorial_flow.run(shared)
+    # Run the flow with enhanced error handling
+    try:
+        tutorial_flow.run(shared)
+    except Exception as e:
+        import traceback
+        print(f"\nERROR: {type(e).__name__}: {e}")
+        print("\nDetailed traceback:")
+        traceback.print_exc()
+        
+        # Print additional debugging info
+        print("\nDebugging information:")
+        if hasattr(e, 'response'):
+            print(f"Response info: {getattr(e, 'response', None)}")
+        
+        print("\nShared context:")
+        for key, value in shared.items():
+            if isinstance(value, (str, int, float, bool)):
+                print(f"  {key}: {value}")
+            else:
+                print(f"  {key}: {type(value).__name__} object")
+        
+        # Exit with error code
+        exit(1)
 
 if __name__ == "__main__":
     main()
