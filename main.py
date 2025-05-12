@@ -1,5 +1,7 @@
 import dotenv
+import sys
 import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # Ensure script dir is in sys.path
 import argparse
 # Import the function that creates the flow
 from flow import create_tutorial_flow
@@ -28,6 +30,7 @@ def main():
     source_group.add_argument("--repo", help="URL of the public GitHub repository.")
     source_group.add_argument("--dir", help="Path to local directory.")
     source_group.add_argument("--file", help="Path to a single input file (e.g., PDF or other document).")
+    source_group.add_argument("--url", help="URL to a web page or document.")
 
     parser.add_argument("-n", "--name", help="Project name (optional, derived from repo/directory if omitted).")
     parser.add_argument("-t", "--token", help="GitHub personal access token (optional, reads from GITHUB_TOKEN env var if not provided).")
@@ -39,6 +42,30 @@ def main():
     parser.add_argument("--language", default="english", help="Language for the generated tutorial (default: english)")
 
     args = parser.parse_args()
+
+    # If --url is provided, fetch the content and save to a temp file, then set args.file
+    if args.url:
+        import tempfile
+        import os
+        try:
+            try:
+                import requests
+                resp = requests.get(args.url)
+                resp.raise_for_status()
+                content = resp.text
+            except ImportError:
+                from urllib.request import urlopen
+                resp = urlopen(args.url)
+                content = resp.read().decode('utf-8')
+            # Write content to a temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.txt', mode='w', encoding='utf-8') as tmpf:
+                tmpf.write(content)
+                tmp_file_path = tmpf.name
+            print(f"Downloaded URL content to {tmp_file_path}")
+            args.file = tmp_file_path
+        except Exception as e:
+            print(f"Failed to fetch URL {args.url}: {e}")
+            exit(1)
 
     # Get GitHub token from argument or environment variable if using repo
     github_token = None
