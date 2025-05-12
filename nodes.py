@@ -1,6 +1,5 @@
 import os
 import yaml
-import re
 from pocketflow import Node, BatchNode
 from utils.crawl_github_files import crawl_github_files
 from utils.call_llm import call_llm
@@ -15,79 +14,6 @@ def get_content_for_indices(files_data, indices):
             content_map[f"{i} # {path}"] = content # Use index + path as key for context
     return content_map
 
-def fix_mermaid_node_labels(mermaid_code):
-    """
-    Ensure all Mermaid node labels in [] and {} are double quoted.
-    """
-    mermaid_code = re.sub(r'\[([^\[\]]+)\]', lambda match: f'["{match.group(1).strip()}"]', mermaid_code)
-    mermaid_code = re.sub(r'\{([^\{\}]+)\}', lambda match: f'{{"{match.group(1).strip()}"}}', mermaid_code)
-    return mermaid_code
-def fix_mermaid_subgraph_labels(mermaid_code):
-    """
-    Ensures all Mermaid labels are quoted, as required by Mermaid v10+.
-    """
-    def replacer(match):
-        label = match.group(1).strip()
-        # 避免重复添加引号
-        if label.startswith('"') and label.endswith('"'):
-            return f'{match.group(0)[:match.start(1)]}"{label}"'
-        return match.group(0)
-    # Match: any label (LABEL can contain anything except newline)
-    # Use positive lookbehind assertion to ensure " is not preceded by \
-    return re.sub(r'(?<!\\)"', '\\"', re.sub(r'([A-Za-z0-9_\-]+)\s*:\s*([^\n]+)', replacer, mermaid_code))
-    
-# Write chapter files with Mermaid subgraph label fix
-def fix_mermaid_sequence_participants(mermaid_code):
-    """
-    Ensures all Mermaid sequenceDiagram participant labels are quoted.
-    """
-    def replacer(match):
-        alias = match.group(1)
-        label = match.group(2).strip()
-        # 避免重复添加引号
-        if label.startswith('"') and label.endswith('"'):
-            return f'participant {alias} as "{label}"'
-        # 转义内部引号
-        escaped_label = label.replace('"', '\\"')
-        return f'participant {alias} as "{escaped_label}"'
-    # Match: participant ALIAS as LABEL
-    return re.sub(r'participant\s+(\w+)\s+as\s+([^\n]+)', replacer, mermaid_code)
-
-def fix_all_mermaid_blocks_in_markdown(markdown_text):
-    import re
-    pattern = re.compile(
-        r'^[ \t]*```mermaid[ \t]*\r?\n([\s\S]*?)(?:\r?\n)?^[ \t]*```.*$',
-        re.MULTILINE
-    )
-    def fix_block(match):
-        code = match.group(1)
-        code = fix_mermaid_subgraph_labels(code)
-        code = fix_mermaid_sequence_participants(code)
-        code = fix_mermaid_node_labels(code)  # <-- ADD THIS LINE
-        code = code.strip('\r\n')
-        return f"```mermaid\n{code}\n```"
-    return pattern.sub(fix_block, markdown_text)
-
-def batch_fix_mermaid_in_dir(directory):
-    """
-    Recursively fix all Mermaid code blocks in .md files under the given directory.
-    """
-    directory = os.path.abspath(directory)
-    if not os.path.isdir(directory):
-        print(f"ERROR: Directory does not exist: {directory}")
-        return
-    print(f"Walking directory: {directory}")
-    for root, _, files in os.walk(directory):
-        for fname in files:
-            if fname.endswith('.md'):
-                path = os.path.join(root, fname)
-                with open(path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                fixed = fix_all_mermaid_blocks_in_markdown(content)
-                if content != fixed:
-                    with open(path, 'w', encoding='utf-8') as f:
-                        f.write(fixed)
-                    print(f"Fixed Mermaid blocks in: {path}")
 class FetchRepo(Node):
     def prep(self, shared):
         repo_url = shared.get("repo_url")
@@ -791,51 +717,46 @@ class CombineTutorial(Node):
             for old, new in replacements.items():
                 text = text.replace(old, new)
             return text
-            
 
-        def sanitize_node_id(text):
-            # Only allow ASCII letters, numbers, and underscores
-            return re.sub(r'[^a-zA-Z0-9_]', '_', text)
-        def quote_label(label):
-            """Ensure Mermaid label is always quoted, as required for v10+."""
-            if not (label.startswith('"') and label.endswith('"')):
-                return f'"{label}"'
-            return label
-        
         def generate_mermaid_diagram(abstractions, relationships_data):
-            """生成 Mermaid 图表代码，确保兼容 Mermaid v10+"""
+            """生成 Mermaid 图表代码"""
             mermaid_lines = ["graph TD"]
-        
-            # 样式定义
+            
+            # 添加样式定义
             mermaid_lines.extend([
                 "    %% 样式定义",
                 '    classDef default fill:#f9f9f9,stroke:#333,stroke-width:1px;',
                 '    classDef concept fill:#e1f5fe,stroke:#0277bd,stroke-width:2px;',
                 '    classDef relation fill:#f3e5f5,stroke:#4a148c,stroke-width:1px;'
             ])
-        
+
             # 添加节点
             for i, abstr in enumerate(abstractions):
                 node_id = f"A{i}"
-                sanitized_label = sanitize_for_mermaid(abstr['name'])
-                quoted_label = quote_label(sanitized_label)
-                mermaid_lines.append(f'    {node_id}[{quoted_label}]')
+                sanitized_name = sanitize_for_mermaid(abstr['name'])
+                # 使用方括号样式的节点
+                mermaid_lines.append(f'    {node_id}["{sanitized_name}"]')
+                # 应用概念样式
                 mermaid_lines.append(f'    class {node_id} concept;')
-        
+
             # 添加边
             for rel in relationships_data['details']:
                 from_node_id = f"A{rel['from']}"
                 to_node_id = f"A{rel['to']}"
+                
                 edge_label = sanitize_for_mermaid(rel['label'])
+                # 限制标签长度
                 max_label_len = 30
                 if len(edge_label) > max_label_len:
                     edge_label = edge_label[:max_label_len-3] + "..."
-                quoted_edge_label = quote_label(edge_label)
-                mermaid_lines.append(f'    {from_node_id} -->|{quoted_edge_label}| {to_node_id}')
-        
+                
+                # 使用 -->|text| 格式的边
+                mermaid_lines.append(f'    {from_node_id} -->|"{edge_label}"| {to_node_id}')
+
+            # 生成最终的图表代码
             mermaid_diagram = "\n".join(mermaid_lines)
             return mermaid_diagram
-
+            
         mermaid_diagram = generate_mermaid_diagram(abstractions, relationships_data)
 
 
@@ -871,16 +792,13 @@ class CombineTutorial(Node):
                 # Keep fixed strings in English
                 chapter_content += f"---\n\nGenerated by [AI Codebase Knowledge Builder](https://github.com/The-Pocket/Tutorial-Codebase-Knowledge)"
 
-                # Fix Mermaid code blocks before storing content
-                fixed_chapter_content = fix_all_mermaid_blocks_in_markdown(chapter_content)
-                chapter_files.append({"filename": filename, "content": fixed_chapter_content})
+                # Store filename and corresponding content
+                chapter_files.append({"filename": filename, "content": chapter_content})
             else:
                  print(f"Warning: Mismatch between chapter order, abstractions, or content at index {i} (abstraction index {abstraction_index}). Skipping file generation for this entry.")
 
         # Add attribution to index content (using English fixed string)
         index_content += f"\n\n---\n\nGenerated by [AI Codebase Knowledge Builder](https://github.com/The-Pocket/Tutorial-Codebase-Knowledge)"
-        # Fix Mermaid code blocks in index_content before returning
-        index_content = fix_all_mermaid_blocks_in_markdown(index_content)
 
         return {
             "output_path": output_path,
@@ -903,13 +821,11 @@ class CombineTutorial(Node):
             f.write(index_content)
         print(f"  - Wrote {index_filepath}")
 
-
-
+        # Write chapter files
         for chapter_info in chapter_files:
             chapter_filepath = os.path.join(output_path, chapter_info["filename"])
-            fixed_content = fix_all_mermaid_blocks_in_markdown(chapter_info["content"])
             with open(chapter_filepath, "w", encoding="utf-8") as f:
-                f.write(fixed_content)
+                f.write(chapter_info["content"])
             print(f"  - Wrote {chapter_filepath}")
 
         return output_path # Return the final path
@@ -918,4 +834,3 @@ class CombineTutorial(Node):
     def post(self, shared, prep_res, exec_res):
         shared["final_output_dir"] = exec_res # Store the output path
         print(f"\nTutorial generation complete! Files are in: {exec_res}")
-
