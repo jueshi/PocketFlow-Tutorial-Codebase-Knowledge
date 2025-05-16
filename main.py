@@ -1,6 +1,10 @@
 import dotenv
 import sys
 import os
+import io
+
+sys.stdout = io.TextIOWrapper(sys.stdout.detach(), encoding='utf-8', errors='replace')
+sys.stderr = io.TextIOWrapper(sys.stderr.detach(), encoding='utf-8', errors='replace')  
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # Ensure script dir is in sys.path
 import argparse
 # Import the function that creates the flow
@@ -47,25 +51,34 @@ def main():
     if args.url:
         import tempfile
         import os
-        try:
+        if args.url.startswith("http://") or args.url.startswith("https://"):
             try:
                 import requests
                 resp = requests.get(args.url)
                 resp.raise_for_status()
+                # Guess file extension from URL or Content-Type
+                ext = os.path.splitext(args.url)[1]
+                if not ext:
+                    import mimetypes
+                    ext = mimetypes.guess_extension(resp.headers.get('Content-Type', '')) or '.md'
+                tmp_file_path = os.path.join(tempfile.gettempdir(), f"downloaded_{os.path.basename(args.url).replace('.', '_')}_{os.getpid()}{ext}")
+                with open(tmp_file_path, 'wb') as f:
+                    f.write(resp.content)
+                print(f"Downloaded URL content to {tmp_file_path}")
+                args.file = tmp_file_path
+            except Exception as e:
+                print(f"Failed to fetch URL {args.url}: {e}")
+                exit(1)
+        else:
+            # Treat as local file path
+            if os.path.exists(args.url):
+                args.file = args.url
+                print(f"Using local file: {args.file}")
+            else:
+                print(f"File not found: {args.url}")
+                exit(1)
+
                 content = resp.text
-            except ImportError:
-                from urllib.request import urlopen
-                resp = urlopen(args.url)
-                content = resp.read().decode('utf-8')
-            # Write content to a temporary file
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.txt', mode='w', encoding='utf-8') as tmpf:
-                tmpf.write(content)
-                tmp_file_path = tmpf.name
-            print(f"Downloaded URL content to {tmp_file_path}")
-            args.file = tmp_file_path
-        except Exception as e:
-            print(f"Failed to fetch URL {args.url}: {e}")
-            exit(1)
 
     # Get GitHub token from argument or environment variable if using repo
     github_token = None
@@ -111,6 +124,10 @@ def main():
         tutorial_flow.run(shared)
     except Exception as e:
         import traceback
+        from google.genai.errors import ServerError
+        if isinstance(e, ServerError):
+            print("The LLM service is temporarily unavailable (503). Please try again later.")
+            exit(2)
         print(f"\nERROR: {type(e).__name__}: {e}")
         print("\nDetailed traceback:")
         traceback.print_exc()
