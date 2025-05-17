@@ -18,12 +18,16 @@ class FetchRepo(Node):
     def prep(self, shared):
         repo_url = shared.get("repo_url")
         local_dir = shared.get("local_dir")
+        single_file = shared.get("single_file")
         project_name = shared.get("project_name")
 
         if not project_name:
-            # Basic name derivation from URL or directory
+            # Basic name derivation from URL, directory, or file
             if repo_url:
                 project_name = repo_url.split('/')[-1].replace('.git', '')
+            elif single_file:
+                # Use the filename without extension as the project name
+                project_name = os.path.splitext(os.path.basename(single_file))[0]
             else:
                 project_name = os.path.basename(os.path.abspath(local_dir))
             shared["project_name"] = project_name
@@ -36,6 +40,7 @@ class FetchRepo(Node):
         return {
             "repo_url": repo_url,
             "local_dir": local_dir,
+            "single_file": single_file,
             "token": shared.get("github_token"),
             "include_patterns": include_patterns,
             "exclude_patterns": exclude_patterns,
@@ -54,6 +59,45 @@ class FetchRepo(Node):
                 max_file_size=prep_res["max_file_size"],
                 use_relative_paths=prep_res["use_relative_paths"]
             )
+        elif prep_res["single_file"]:
+            print(f"Processing single file: {prep_res['single_file']}...")
+            # Handle a single file input
+            single_file_path = prep_res["single_file"]
+            
+            if not os.path.isfile(single_file_path):
+                raise ValueError(f"File does not exist: {single_file_path}")
+                
+            try:
+                file_content = ""
+                file_name = os.path.basename(single_file_path)
+                
+                # Handle PDF files
+                if single_file_path.lower().endswith('.pdf'):
+                    print(f"Reading PDF file: {single_file_path}")
+                    try:
+                        import PyPDF2
+                        pdf_text = ""
+                        with open(single_file_path, 'rb') as pdf_file:
+                            pdf_reader = PyPDF2.PdfReader(pdf_file)
+                            for page_num in range(len(pdf_reader.pages)):
+                                page = pdf_reader.pages[page_num]
+                                pdf_text += f"\n--- Page {page_num + 1} ---\n"
+                                pdf_text += page.extract_text()
+                        file_content = pdf_text
+                    except Exception as pdf_error:
+                        print(f"Error processing PDF: {pdf_error}")
+                        file_content = f"[PDF CONTENT: {file_name}]\n\nThis PDF file could not be processed due to an error."
+                # Handle other file types as text
+                else:
+                    with open(single_file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        file_content = f.read()
+                        
+                # Create a result dictionary similar to what crawl_local_files returns
+                result = {"files": {file_name: file_content}}
+                
+            except Exception as e:
+                print(f"Error reading file {single_file_path}: {e}")
+                raise ValueError(f"Failed to read file: {e}")
         else:
             print(f"Crawling directory: {prep_res['local_dir']}...")
             result = crawl_local_files(
@@ -67,7 +111,29 @@ class FetchRepo(Node):
         # Convert dict to list of tuples: [(path, content), ...]
         files_list = list(result.get("files", {}).items())
         if len(files_list) == 0:
-            raise(ValueError("Failed to fetch files"))
+            print("Warning: No files were fetched. This could be due to:")
+            print("  1. No files matching the include patterns")
+            print("  2. All matching files were excluded by exclude patterns")
+            print("  3. Files exceeded the maximum file size limit")
+            
+            # For PDF files, create a placeholder file if none were found but PDF files exist
+            if any(pattern.endswith('.pdf') for pattern in (prep_res["include_patterns"] or set())):
+                pdf_files = []
+                for root, _, files in os.walk(prep_res["local_dir"]):
+                    for file in files:
+                        if file.lower().endswith('.pdf'):
+                            filepath = os.path.join(root, file)
+                            relpath = os.path.relpath(filepath, prep_res["local_dir"])
+                            pdf_files.append((relpath, f"[PDF CONTENT: {file}]\n\nThis is placeholder content for a PDF file."))
+                
+                if pdf_files:
+                    print(f"Found {len(pdf_files)} PDF files, using them as placeholders.")
+                    files_list = pdf_files
+                else:
+                    raise(ValueError("Failed to fetch files"))
+            else:
+                raise(ValueError("Failed to fetch files"))
+                
         print(f"Fetched {len(files_list)} files.")
         return files_list
 
@@ -633,27 +699,66 @@ class CombineTutorial(Node):
         chapters_content = shared["chapters"]   # list of strings -> content potentially translated
 
         # --- Generate Mermaid Diagram ---
-        mermaid_lines = ["flowchart TD"]
-        # Add nodes for each abstraction using potentially translated names
-        for i, abstr in enumerate(abstractions):
-            node_id = f"A{i}"
-            # Use potentially translated name, sanitize for Mermaid ID and label
-            sanitized_name = abstr['name'].replace('"', '')
-            node_label = sanitized_name # Using sanitized name only
-            mermaid_lines.append(f'    {node_id}["{node_label}"]') # Node label uses potentially translated name
-        # Add edges for relationships using potentially translated labels
-        for rel in relationships_data['details']:
-            from_node_id = f"A{rel['from']}"
-            to_node_id = f"A{rel['to']}"
-            # Use potentially translated label, sanitize
-            edge_label = rel['label'].replace('"', '').replace('\n', ' ') # Basic sanitization
-            max_label_len = 30
-            if len(edge_label) > max_label_len:
-                edge_label = edge_label[:max_label_len-3] + "..."
-            mermaid_lines.append(f'    {from_node_id} -- "{edge_label}" --> {to_node_id}') # Edge label uses potentially translated label
+        def sanitize_for_mermaid(text):
+            """清理文本以适应 Mermaid 语法"""
+            replacements = {
+                '"': '\\"',
+                '[': '\\[',
+                ']': '\\]',
+                '(': '\\(',
+                ')': '\\)',
+                '{': '\\{',
+                '}': '\\}',
+                '\n': '<br>',  # 处理换行
+                '&': '&amp;',  # HTML 实体
+                '<': '&lt;',
+                '>': '&gt;'
+            }
+            for old, new in replacements.items():
+                text = text.replace(old, new)
+            return text
 
-        mermaid_diagram = "\n".join(mermaid_lines)
-        # --- End Mermaid ---
+        def generate_mermaid_diagram(abstractions, relationships_data):
+            """生成 Mermaid 图表代码"""
+            mermaid_lines = ["graph TD"]
+            
+            # 添加样式定义
+            mermaid_lines.extend([
+                "    %% 样式定义",
+                '    classDef default fill:#f9f9f9,stroke:#333,stroke-width:1px;',
+                '    classDef concept fill:#e1f5fe,stroke:#0277bd,stroke-width:2px;',
+                '    classDef relation fill:#f3e5f5,stroke:#4a148c,stroke-width:1px;'
+            ])
+
+            # 添加节点
+            for i, abstr in enumerate(abstractions):
+                node_id = f"A{i}"
+                sanitized_name = sanitize_for_mermaid(abstr['name'])
+                # 使用方括号样式的节点
+                mermaid_lines.append(f'    {node_id}["{sanitized_name}"]')
+                # 应用概念样式
+                mermaid_lines.append(f'    class {node_id} concept;')
+
+            # 添加边
+            for rel in relationships_data['details']:
+                from_node_id = f"A{rel['from']}"
+                to_node_id = f"A{rel['to']}"
+                
+                edge_label = sanitize_for_mermaid(rel['label'])
+                # 限制标签长度
+                max_label_len = 30
+                if len(edge_label) > max_label_len:
+                    edge_label = edge_label[:max_label_len-3] + "..."
+                
+                # 使用 -->|text| 格式的边
+                mermaid_lines.append(f'    {from_node_id} -->|"{edge_label}"| {to_node_id}')
+
+            # 生成最终的图表代码
+            mermaid_diagram = "\n".join(mermaid_lines)
+            return mermaid_diagram
+            
+        mermaid_diagram = generate_mermaid_diagram(abstractions, relationships_data)
+
 
         # --- Prepare index.md content ---
         index_content = f"# Tutorial: {project_name}\n\n"
