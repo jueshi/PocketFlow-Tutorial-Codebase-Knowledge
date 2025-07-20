@@ -1,28 +1,42 @@
 import sys
 import os
 import io
+import argparse
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QFileDialog, QRadioButton, QButtonGroup, QTextEdit, QComboBox
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from main import run_flow
 
 sys.stdout = io.TextIOWrapper(sys.stdout.detach(), encoding='utf-8', errors='replace')
 sys.stderr = io.TextIOWrapper(sys.stderr.detach(), encoding='utf-8', errors='replace')  
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QLabel, QLineEdit, QPushButton, QTextEdit,
-    QFileDialog, QVBoxLayout, QHBoxLayout, QComboBox
-)
-from PyQt5.QtCore import Qt
-import subprocess
+
+class Worker(QThread):
+    finished = pyqtSignal(dict)
+    error = pyqtSignal(str)
+
+    def __init__(self, func, args):
+        super().__init__()
+        self.func = func
+        self.args = args
+
+    def run(self):
+        try:
+            result = self.func(self.args)
+            self.finished.emit(result)
+        except Exception as e:
+            self.error.emit(str(e))
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('Run main.py with File/Directory Input')
         self.resize(600, 350)
+        self.input_type = "file"  # Default to file input
         self.init_ui()
 
     def init_ui(self):
         layout = QVBoxLayout()
 
         # Input mode (File/Dir or URL)
-        from PyQt5.QtWidgets import QRadioButton, QButtonGroup
         mode_layout = QHBoxLayout()
         self.file_radio = QRadioButton('文件/目录')
         self.file_radio.setChecked(True)
@@ -108,13 +122,22 @@ class MainWindow(QWidget):
 
     def select_input(self):
         options = QFileDialog.Options()
-        file_path, _ = QFileDialog.getOpenFileName(self, '选择文件', '', 'All Files (*)', options=options)
-        if not file_path:
+        # Add radio buttons to choose between file and directory
+        file_or_dir = QFileDialog.getOpenFileName(self, '选择文件或目录', '', 'All Files (*)', options=options)
+        
+        if file_or_dir[0]:
+            self.input_edit.setText(file_or_dir[0])
+            # Check if it's a file or directory
+            if os.path.isdir(file_or_dir[0]):
+                self.input_type = "dir"
+            else:
+                self.input_type = "file"
+        else:
+            # If cancel was pressed, try directory selection
             dir_path = QFileDialog.getExistingDirectory(self, '选择目录', '', options=options)
             if dir_path:
                 self.input_edit.setText(dir_path)
-        else:
-            self.input_edit.setText(file_path)
+                self.input_type = "dir"
 
     def select_output(self):
         options = QFileDialog.Options()
@@ -125,39 +148,77 @@ class MainWindow(QWidget):
     def run_main(self):
         language = self.lang_combo.currentText()
         output_dir = self.output_edit.text().strip()
-        main_py = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'main.py')
-        if not os.path.exists(main_py):
-            self.output_area.append('找不到 main.py 文件!')
-            return
         if self.file_radio.isChecked():
             input_path = self.input_edit.text().strip()
             if not input_path or not output_dir:
                 self.output_area.append('请填写输入文件/目录和输出目录!')
                 return
-            cmd = [sys.executable, main_py, '--file', input_path, '--language', language, '-o', output_dir]
         else:
             url = self.url_edit.text().strip()
             if not url or not output_dir:
                 self.output_area.append('请填写URL和输出目录!')
                 return
-            cmd = [sys.executable, main_py, '--url', url, '--language', language, '-o', output_dir]
-        self.output_area.append(f'运行命令: {" ".join(cmd)}')
-        self.output_area.append('...请稍候...\n')
-        try:
-            proc = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                cwd=os.path.dirname(main_py)  # Ensure cwd is main.py's folder
-            )
-            stdout, stderr = proc.communicate()
-            if stdout:
-                self.output_area.append(stdout)
-            if stderr:
-                self.output_area.append('<span style="color:red">'+stderr+'</span>')
-        except Exception as e:
-            self.output_area.append(f'运行出错: {e}')
+
+        # Determine if input is file or directory
+        if self.file_radio.isChecked():
+            input_path = self.input_edit.text().strip()
+            is_dir = os.path.isdir(input_path)
+            file_arg = None if is_dir else input_path
+            dir_arg = input_path if is_dir else None
+        else:
+            file_arg = None
+            dir_arg = None
+
+        args = argparse.Namespace(
+            file=file_arg,
+            url=self.url_edit.text().strip() if self.url_radio.isChecked() else None,
+            dir=dir_arg,
+            repo=None, 
+            name=None, 
+            token=None, 
+            github=None,
+            use_relative_paths=False,
+            max_size=100000,
+            include=None,
+            exclude=None,
+            language=self.lang_combo.currentText(),
+            output=output_dir,
+            model_name='gemini-1.5-flash',
+            template_path='prompts/tutorial_template.md',
+            temperature=0.7,
+            max_tokens=4096,
+            stop=None,
+            top_p=1.0,
+            top_k=32,
+            retries=3,
+            timeout=120,
+            use_proxy=False,
+            proxy_address=None,
+            debug=True
+        )
+
+        input_type = "URL" if self.url_radio.isChecked() else ("Directory" if dir_arg else "File")
+        input_path = args.url or args.dir or args.file
+        self.output_area.append(f'Starting tutorial generation for: {input_path} ({input_type})')
+        self.output_area.append('...Please wait...\n')
+
+        self.worker = Worker(run_flow, args)
+        self.worker.finished.connect(self.on_run_finished)
+        self.worker.error.connect(self.on_run_error)
+        self.worker.start()
+
+    def on_run_finished(self, result):
+        self.output_area.append("\n--- Tutorial Generation Finished ---")
+        if 'error' in result:
+            self.output_area.append(f"An error occurred: {result['error']}")
+        else:
+            self.output_area.append(f"Tutorial saved to: {result.get('tutorial_path', 'N/A')}")
+        self.run_btn.setEnabled(True)
+
+    def on_run_error(self, error_message):
+        self.output_area.append(f"\n--- An unexpected error occurred ---")
+        self.output_area.append(error_message)
+        self.run_btn.setEnabled(True)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

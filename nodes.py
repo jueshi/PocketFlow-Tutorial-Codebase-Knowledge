@@ -16,37 +16,27 @@ def get_content_for_indices(files_data, indices):
 
 class FetchRepo(Node):
     def prep(self, shared):
+        # Extract parameters from shared context
         repo_url = shared.get("repo_url")
-        local_dir = shared.get("local_dir")
+        directory = shared.get("directory")
         single_file = shared.get("single_file")
-        project_name = shared.get("project_name")
+        token = shared.get("token")
+        include_patterns = shared.get("include_patterns")
+        exclude_patterns = shared.get("exclude_patterns")
+        max_file_size = shared.get("max_file_size")
 
-        if not project_name:
-            # Basic name derivation from URL, directory, or file
-            if repo_url:
-                project_name = repo_url.split('/')[-1].replace('.git', '')
-            elif single_file:
-                # Use the filename without extension as the project name
-                project_name = os.path.splitext(os.path.basename(single_file))[0]
-            else:
-                project_name = os.path.basename(os.path.abspath(local_dir))
-            shared["project_name"] = project_name
-
-        # Get file patterns directly from shared
-        include_patterns = shared["include_patterns"]
-        exclude_patterns = shared["exclude_patterns"]
-        max_file_size = shared["max_file_size"]
-
-        return {
+        # Prepare a dictionary to be passed to the exec method
+        prep_res = {
             "repo_url": repo_url,
-            "local_dir": local_dir,
+            "directory": directory,
             "single_file": single_file,
-            "token": shared.get("github_token"),
+            "token": token,
             "include_patterns": include_patterns,
             "exclude_patterns": exclude_patterns,
             "max_file_size": max_file_size,
-            "use_relative_paths": True
+            "use_relative_paths": bool(repo_url)  # Use relative paths for repos
         }
+        return prep_res
 
     def exec(self, prep_res):
         if prep_res["repo_url"]:
@@ -59,53 +49,75 @@ class FetchRepo(Node):
                 max_file_size=prep_res["max_file_size"],
                 use_relative_paths=prep_res["use_relative_paths"]
             )
+        elif prep_res["directory"]:
+            print(f"Crawling directory: {prep_res['directory']}...")
+            result = crawl_local_files(
+                directory=prep_res["directory"],
+                include_patterns=prep_res["include_patterns"],
+                exclude_patterns=prep_res["exclude_patterns"],
+                max_file_size=prep_res["max_file_size"],
+                use_relative_paths=False
+            )
         elif prep_res["single_file"]:
             print(f"Processing single file: {prep_res['single_file']}...")
             # Handle a single file input
             single_file_path = prep_res["single_file"]
-            
-            if not os.path.isfile(single_file_path):
-                raise ValueError(f"File does not exist: {single_file_path}")
-                
-            try:
-                file_content = ""
-                file_name = os.path.basename(single_file_path)
-                
-                # Handle PDF files
-                if single_file_path.lower().endswith('.pdf'):
-                    print(f"Reading PDF file: {single_file_path}")
-                    try:
-                        import PyPDF2
-                        pdf_text = ""
-                        with open(single_file_path, 'rb') as pdf_file:
-                            pdf_reader = PyPDF2.PdfReader(pdf_file)
-                            for page_num in range(len(pdf_reader.pages)):
-                                page = pdf_reader.pages[page_num]
-                                pdf_text += f"\n--- Page {page_num + 1} ---\n"
-                                pdf_text += page.extract_text()
-                        file_content = pdf_text
-                    except Exception as pdf_error:
-                        print(f"Error processing PDF: {pdf_error}")
-                        file_content = f"[PDF CONTENT: {file_name}]\n\nThis PDF file could not be processed due to an error."
-                # Handle other file types as text
-                else:
-                    with open(single_file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        file_content = f.read()
-                        
-                # Create a result dictionary similar to what crawl_local_files returns
-                result = {"files": {file_name: file_content}}
-                
-            except Exception as e:
-                print(f"Error reading file {single_file_path}: {e}")
-                raise ValueError(f"Failed to read file: {e}")
+
+            # Basic validation to check if the path is plausible
+            if not single_file_path or "\n" in single_file_path or "Exception" in single_file_path:
+                raise ValueError(f"Invalid input path provided: {single_file_path}")
+
+            if os.path.isdir(single_file_path):
+                print(f"Path is a directory, crawling: {single_file_path}")
+                result = crawl_local_files(
+                    directory=single_file_path,
+                    include_patterns=prep_res.get("include_patterns"),
+                    exclude_patterns=prep_res.get("exclude_patterns"),
+                    max_file_size=prep_res.get("max_file_size"),
+                    use_relative_paths=False
+                )
+            elif not os.path.isfile(single_file_path):
+                raise ValueError(f"File or directory does not exist: {single_file_path}")
+            else:
+                try:
+                    file_content = ""
+                    file_name = os.path.basename(single_file_path)
+                    
+                    # Handle PDF files
+                    if single_file_path.lower().endswith('.pdf'):
+                        print(f"Reading PDF file: {single_file_path}")
+                        try:
+                            import PyPDF2
+                            pdf_text = ""
+                            with open(single_file_path, 'rb') as pdf_file:
+                                pdf_reader = PyPDF2.PdfReader(pdf_file)
+                                for page_num in range(len(pdf_reader.pages)):
+                                    page = pdf_reader.pages[page_num]
+                                    pdf_text += f"\n--- Page {page_num + 1} ---\n"
+                                    pdf_text += page.extract_text()
+                            file_content = pdf_text
+                        except Exception as pdf_error:
+                            print(f"Error processing PDF: {pdf_error}")
+                            file_content = f"[PDF CONTENT: {file_name}]\n\nThis PDF file could not be processed due to an error."
+                    # Handle other file types as text
+                    else:
+                        with open(single_file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                            file_content = f.read()
+                            
+                    # Create a result dictionary similar to what crawl_local_files returns
+                    result = {"files": {file_name: file_content}}
+                    
+                except Exception as e:
+                    print(f"Error reading file {single_file_path}: {e}")
+                    raise ValueError(f"Failed to read file: {e}")
         else:
-            print(f"Crawling directory: {prep_res['local_dir']}...")
+            print(f"Crawling directory: {prep_res['directory']}...")
             result = crawl_local_files(
-                directory=prep_res["local_dir"],
+                directory=prep_res["directory"],
                 include_patterns=prep_res["include_patterns"],
                 exclude_patterns=prep_res["exclude_patterns"],
                 max_file_size=prep_res["max_file_size"],
-                use_relative_paths=prep_res["use_relative_paths"]
+                use_relative_paths=False
             )
 
         # Convert dict to list of tuples: [(path, content), ...]
@@ -119,11 +131,11 @@ class FetchRepo(Node):
             # For PDF files, create a placeholder file if none were found but PDF files exist
             if any(pattern.endswith('.pdf') for pattern in (prep_res["include_patterns"] or set())):
                 pdf_files = []
-                for root, _, files in os.walk(prep_res["local_dir"]):
+                for root, _, files in os.walk(prep_res["directory"]):
                     for file in files:
                         if file.lower().endswith('.pdf'):
                             filepath = os.path.join(root, file)
-                            relpath = os.path.relpath(filepath, prep_res["local_dir"])
+                            relpath = os.path.relpath(filepath, prep_res["directory"])
                             pdf_files.append((relpath, f"[PDF CONTENT: {file}]\n\nThis is placeholder content for a PDF file."))
                 
                 if pdf_files:
@@ -131,14 +143,29 @@ class FetchRepo(Node):
                     files_list = pdf_files
                 else:
                     raise(ValueError("Failed to fetch files"))
-            else:
-                raise(ValueError("Failed to fetch files"))
                 
         print(f"Fetched {len(files_list)} files.")
         return files_list
 
     def post(self, shared, prep_res, exec_res):
         shared["files"] = exec_res # List of (path, content) tuples
+        
+        # Derive project_name if not already set
+        if shared.get("project_name") is None:
+            if shared.get("repo_url"):
+                # Extract project name from repo URL
+                repo_parts = shared["repo_url"].rstrip('/').split('/')
+                shared["project_name"] = repo_parts[-1]
+            elif shared.get("directory"):
+                # Extract project name from directory
+                shared["project_name"] = os.path.basename(shared["directory"])
+            elif shared.get("single_file"):
+                # Use filename without extension as project name
+                base_name = os.path.basename(shared["single_file"])
+                shared["project_name"] = os.path.splitext(base_name)[0]
+            else:
+                # Fallback to a default name
+                shared["project_name"] = "codebase-tutorial"
 
 class IdentifyAbstractions(Node):
     def prep(self, shared):
@@ -345,10 +372,7 @@ relationships:
     to_abstraction: 0 # AbstractionName1
     label: "Provides config"{lang_hint}
   # ... other relationships
-```
-
-Now, provide the YAML output:
-"""
+```"""
         response = call_llm(prompt)
 
         # --- Validation ---
@@ -611,7 +635,6 @@ class WriteChapters(BatchNode):
             link_lang_note = f" (Use the {lang_cap} chapter title from the structure above)"
             tone_note = f" (appropriate for {lang_cap} readers)"
 
-
         prompt = f"""
 {language_instruction}Write a very beginner-friendly tutorial chapter (in Markdown format) for the project `{project_name}` about the concept: "{abstraction_name}". This is Chapter {chapter_num}.
 
@@ -834,3 +857,45 @@ class CombineTutorial(Node):
     def post(self, shared, prep_res, exec_res):
         shared["final_output_dir"] = exec_res # Store the output path
         print(f"\nTutorial generation complete! Files are in: {exec_res}")
+
+class SaveTutorial(Node):
+    def prep(self, shared):
+        project_name = shared.get("project_name")
+        output_dir = shared.get("output_dir")
+
+        # If project_name is not set, create a default from the single_file path
+        if not project_name:
+            single_file = shared.get("single_file")
+            if single_file:
+                project_name = os.path.splitext(os.path.basename(single_file))[0]
+            else:
+                project_name = "tutorial_output"
+
+        # Sanitize the project name to be used as a filename
+        import re
+        safe_project_name = re.sub(r'[\/*?"<>|]', "", project_name)
+        tutorial_file_name = f"{safe_project_name}_tutorial.md"
+        
+        # Ensure the output directory exists
+        os.makedirs(output_dir, exist_ok=True)
+        
+        tutorial_path = os.path.join(output_dir, tutorial_file_name)
+        
+        return {
+            "tutorial_path": tutorial_path,
+            "tutorial_content": shared["tutorial_md"]
+        }
+
+    def exec(self, prep_res):
+        tutorial_path = prep_res["tutorial_path"]
+        tutorial_content = prep_res["tutorial_content"]
+
+        with open(tutorial_path, "w", encoding="utf-8") as f:
+            f.write(tutorial_content)
+        
+        return tutorial_path
+
+    def post(self, shared, prep_res, exec_res):
+        shared["tutorial_path"] = exec_res
+        print(f"✅ Tutorial saved to: {exec_res}")
+        return shared
