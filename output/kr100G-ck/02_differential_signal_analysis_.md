@@ -18,11 +18,11 @@ Chapter 1 showed us how to load a `.s4p` file, giving us a `s_parameter_data` va
 
 ```mermaid
 graph LR
-    subgraph Input End
+    subgraph "Input End"
         Port1(Port 1: In +)
         Port3(Port 3: In -)
     end
-    subgraph Output End
+    subgraph "Output End"
         Port2(Port 2: Out +)
         Port4(Port 4: Out -)
     end

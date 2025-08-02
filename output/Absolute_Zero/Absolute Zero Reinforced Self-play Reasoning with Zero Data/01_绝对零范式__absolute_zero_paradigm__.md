@@ -49,8 +49,8 @@
 
 ```mermaid
 sequenceDiagram
-    participant 模型 as 模型 (πθ)
-    participant 环境 as 环境 (例如代码执行器)
+    participant 模型 as "模型 (πθ)"
+    participant 环境 as "环境 (例如代码执行器)"
 
     Note over 模型, 环境: 学习循环开始
     模型->>环境: 提议一个新任务 τ
@@ -61,7 +61,6 @@ sequenceDiagram
     环境-->>模型: 返回对答案 y 的评估（解答奖励 r_solve）
     模型->>模型: 根据 r_propose (任务提议的好坏) 和 <br> r_solve (问题解答的对错) 更新自身参数 θ，<br>提升提议和解决任务的能力
     Note over 模型, 环境: 循环往复，不断进化
-
 ```
 
 在这个循环中，模型扮演着两个角色：一个是**任务提议者 (Proposer)**，负责创造新的、具有学习价值的任务；另一个是**任务解决者 (Solver)**，负责解决这些任务。这两个角色通常由同一个底层模型承担，这将在后续章节[双重角色：任务提议与解决](05_双重角色_任务提议与解决__dual_roles__proposer___solver__.md)中详细介绍。

@@ -142,23 +142,23 @@ def sum_list_elements(numbers):
 
 ```mermaid
 graph TD
-    subgraph AZR["AZR训练循环"]
+    subgraph "AZR["AZR训练循环"]"
         Proposer["任务提议者 π提议"] --> |"生成任务"| TaskBuffer["任务缓冲池"]
         TaskBuffer --> |"采样"| TaskType{"任务类型?"}
         
-        subgraph Deduction["演绎Deduction"]
+        subgraph "Deduction["演绎Deduction"]"
             TaskType --> |"p, i"| Solver_Ded["解决者 π解决\n预测输出 o'"]
             Solver_Ded --> |"o'"| Executor_Ded["代码执行器\n验证 p(i) == o'"]
             Executor_Ded --> |"奖励"| AZR_Model["AZR 模型参数 θ 更新"]
         end
 
-        subgraph Abduction["溯因Abduction"]
+        subgraph "Abduction["溯因Abduction"]"
             TaskType --> |"p, o"| Solver_Abd["解决者 π解决\n推断输入 i'"]
             Solver_Abd --> |"i'"| Executor_Abd["代码执行器\n验证 p(i') == o"]
             Executor_Abd --> |"奖励"| AZR_Model
         end
 
-        subgraph Induction["归纳Induction"]
+        subgraph "Induction["归纳Induction"]"
             TaskType --> |"(i,o), m"| Solver_Ind["解决者 π解决\n生成程序 p'"]
             Solver_Ind --> |"p'"| Executor_Ind["代码执行器\n验证 p'(i,o)test"]
             Executor_Ind --> |"奖励"| AZR_Model
@@ -173,7 +173,6 @@ graph TD
     style Executor_Abd fill:#f8f9fa,stroke:#333
     style Executor_Ind fill:#f8f9fa,stroke:#333
     style AZR_Model fill:#e2e3e5
-
 ```
 这个图表概括了 AZR 如何针对不同推理模式的任务进行提议、解决和学习。提议者产生不同类型的任务，解决者尝试解决它们，代码执行器提供验证和奖励，最终驱动模型参数的更新。
 

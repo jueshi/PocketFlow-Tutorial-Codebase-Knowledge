@@ -58,7 +58,6 @@ graph LR
     %% 添加注释
     note["相互挑战与学习"]
     S --- note
-
 ```
 在这个循环中，智能体 (AZR) 通过其内部的“提议者”和“解决者”角色进行自博弈，从环境（代码执行器）获得奖励，并不断优化其策略。
 
@@ -94,9 +93,9 @@ graph LR
 
 ```mermaid
 sequenceDiagram
-    participant AZR_Proposer as AZR (提议者角色 π提议θ)
-    participant AZR_Solver as AZR (解决者角色 π解决θ)
-    participant CodeExecutor as 代码执行器 (环境 e)
+    participant AZR_Proposer as "AZR (提议者角色 π提议θ)"
+    participant AZR_Solver as "AZR (解决者角色 π解决θ)"
+    participant CodeExecutor as "代码执行器 (环境 e)"
 
     AZR_Proposer->>CodeExecutor: 提议任务 τ
     CodeExecutor-->>AZR_Proposer: 返回 (x, y⋆) 和 r_propose
@@ -105,7 +104,6 @@ sequenceDiagram
     CodeExecutor-->>AZR_Solver: 返回 r_solve
     AZR_Solver->>AZR_Solver: 根据 r_propose 和 r_solve 更新模型参数 θ
     Note over AZR_Proposer, CodeExecutor: 循环往复，能力共同提升
-
 ```
 在这个过程中，AZR 的提议者和解决者就像一个团队的两个成员，他们互相配合，共同进步。提议者努力提出有价值的“训练项目”，解决者努力完成这些项目，双方都从结果中学习，从而提升整个团队（即 AZR 模型）的整体能力。
 

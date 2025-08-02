@@ -92,13 +92,13 @@ Let's look at the typical sequence of events when `com_code` processes channel d
 ```mermaid
 sequenceDiagram
     participant User
-    participant MainScript as COM.m
+    participant MainScript as "COM.m"
     participant Config (from Ch1)
     participant ChannelSetup as "High-level Channel Setup"
-    participant FileFinder as get_s4p_files.m
-    participant SParamReader as read_s4p_files.m
-    participant PackageModeler as s21_pkg.m
-    participant DataStore as chdata
+    participant FileFinder as "get_s4p_files.m"
+    participant SParamReader as "read_s4p_files.m"
+    participant PackageModeler as "s21_pkg.m"
+    participant DataStore as "chdata"
 
     User->>MainScript: Run COM with config file
     MainScript->>Config: Parameters loaded (from Ch1)

@@ -112,8 +112,8 @@ AZR 最巧妙的设计之一在于，“任务提议者”和“任务解决者�
 
 ```mermaid
 sequenceDiagram
-    participant AZR_Model as AZR 模型 (共享参数 θ)
-    participant Env as 环境 (如代码执行器)
+    participant AZR_Model as "AZR 模型 (共享参数 θ)"
+    participant Env as "环境 (如代码执行器)"
 
     AZR_Model->>Env: (作为提议者 π提议θ) 提议任务 τ
     Env-->>AZR_Model: 返回问题 (x, y⋆) 和提议奖励 r_propose
@@ -121,7 +121,6 @@ sequenceDiagram
     Env-->>AZR_Model: 返回解答奖励 r_solve
     AZR_Model->>AZR_Model: 根据 r_propose 和 r_solve 更新共享参数 θ
     Note over AZR_Model, Env: 循环往复，能力共同提升
-
 ```
 
 在这个图中，`AZR 模型` 代表了同一个底层模型，它根据上下文扮演提议者或解决者的角色。这两个角色之间的互动，以及与环境的反馈，共同驱动了模型的学习和进化。这正呼应了论文第3.1节“Two Roles in One: Proposer and Solver”的核心思想。

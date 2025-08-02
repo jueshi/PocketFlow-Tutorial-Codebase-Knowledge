@@ -95,10 +95,10 @@ Let's visualize the process when you call `com_calculator()`:
 ```mermaid
 sequenceDiagram
     participant User
-    participant COM_Call as com_calculator()
-    participant OptEq as COM.opt_eq()
-    participant CalcFOM as COM.calc_fom()
-    participant PR_Gen as Pulse Response Generation
+    participant COM_Call as "com_calculator()"
+    participant OptEq as "COM.opt_eq()"
+    participant CalcFOM as "COM.calc_fom()"
+    participant PR_Gen as "Pulse Response Generation"
 
     User->>COM_Call: Calls com_calculator() to start calculation
     COM_Call->>OptEq: Begin optimizing equalizer settings

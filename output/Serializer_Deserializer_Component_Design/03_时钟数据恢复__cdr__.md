@@ -29,15 +29,15 @@ CDR 电路的主要目标可以概括为：
 
 ```mermaid
 graph LR
-    subgraph CDR 电路 (基于PLL)
-        DataIn[串行数据输入] --> PD[相位检测器 (PD)]
-        VCO_Clock[本地恢复时钟] --> PD
-        PD -- 相位误差信号 --> LF[环路滤波器 (LF)]
-        LF -- 控制电压 --> VCO[压控振荡器 (VCO)]
-        VCO -- 本地恢复时钟 --> Data_Sampler[数据采样/判决逻辑]
-        VCO -- 本地恢复时钟 --> RecoveredClockOut[恢复时钟输出]
-        DataIn --> Data_Sampler
-        Data_Sampler --> RecoveredDataOut[恢复的并行数据 (经过解串后)]
+    subgraph "CDR 电路 (基于PLL)"
+        DataIn["串行数据输入"] -->|"1"| PD["相位检测器 (PD)"]
+        VCO_Clock["本地恢复时钟"] -->|"2"| PD
+        PD -->|"3"| PhaseError["相位误差信号"] --> LF["环路滤波器 (LF)"]
+        LF -->|"4"| ControlVoltage["控制电压"] --> VCO["压控振荡器 (VCO)"]
+        VCO -->|"5"| RecoveredClock["本地恢复时钟"] --> Data_Sampler["数据采样/判决逻辑"]
+        VCO -->|"6"| RecoveredClockOut["恢复时钟输出"]
+        DataIn -->|"7"| Data_Sampler
+        Data_Sampler -->|"8"| RecoveredDataOut["恢复的并行数据 (经过解串后)"]
     end
 ```
 
@@ -66,11 +66,11 @@ graph LR
 
 ```mermaid
 sequenceDiagram
-    participant DataIn as 接收到的串行数据
-    participant PD as 相位检测器 (PD)
-    participant LF as 环路滤波器 (LF)
-    participant VCO as 压控振荡器 (VCO)
-    participant Sampler as 数据采样器 (使用恢复时钟)
+    participant DataIn as "接收到的串行数据"
+    participant PD as "相位检测器 (PD)"
+    participant LF as "环路滤波器 (LF)"
+    participant VCO as "压控振荡器 (VCO)"
+    participant Sampler as "数据采样器 (使用恢复时钟)"
 
     loop 持续锁定过程
         DataIn->>PD: 观察数据流中的电平跳变

@@ -61,11 +61,11 @@ Let's peek behind the curtain. When you tell `com_code` to run with a specific c
 ```mermaid
 sequenceDiagram
     participant User
-    participant MainScript as COM.m
-    participant CmdLineParser as COM_CommandLine_Parse.m
-    participant ConfigReader as read_ParamConfigFile.m
-    participant XLS_Helper as xls_parameter.m
-    participant SimEngine as Simulation Engine
+    participant MainScript as "COM.m"
+    participant CmdLineParser as "COM_CommandLine_Parse.m"
+    participant ConfigReader as "read_ParamConfigFile.m"
+    participant XLS_Helper as "xls_parameter.m"
+    participant SimEngine as "Simulation Engine"
 
     User->>MainScript: `COM('my_config.xlsx')`
     MainScript->>CmdLineParser: Parse command line arguments

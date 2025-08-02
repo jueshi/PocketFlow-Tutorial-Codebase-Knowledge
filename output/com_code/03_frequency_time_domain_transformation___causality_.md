@@ -27,14 +27,14 @@ Let's break down the important terms:
     *   Think of striking a bell with a hammer. The sound you hear evolving over time is like the bell's impulse response. The initial sharp strike is the impulse, and the ringing, fading sound is the response.
     *   If we know the impulse response, we can predict how the channel will affect *any* signal, not just an ideal impulse.
 
-    ```mermaid
+```mermaid
     graph LR
-        subgraph Channel
+        subgraph "Channel"
             direction LR
             Input[Ideal Short Pulse (Impulse δ(t))] --> System[h(t)]
             System --> Output[Impulse Response]
         end
-    ```
+```
 
 3.  **The Magic Translator: Inverse Fast Fourier Transform (IFFT)**
     *   The **Fast Fourier Transform (FFT)** and its counterpart, the **Inverse Fast Fourier Transform (IFFT)**, are powerful mathematical tools that act as translators between the frequency domain and the time domain.
@@ -53,16 +53,16 @@ Let's break down the important terms:
     *   **Impulse Response:** The channel's reaction to a *theoretical, infinitely short* input spike. This is what we typically get directly from the IFFT of S-parameters.
     *   **Pulse Response:** The channel's reaction to a more realistic input pulse that has a specific width (e.g., the duration of one data bit, known as a Unit Interval or UI). The pulse response is usually derived from the impulse response (often by convolving or filtering the impulse response with a rectangular pulse shape). `com_code` often refers to this as `uneq_pulse_response` (unequalized pulse response).
 
-    ```mermaid
+```mermaid
     sequenceDiagram
-        participant IR as Impulse Response h(t)
-        participant InputPulse as Square Input Pulse (1 UI wide)
-        participant PR as Pulse Response p(t)
+        participant IR as "Impulse Response h(t)"
+        participant InputPulse as "Square Input Pulse (1 UI wide)"
+        participant PR as "Pulse Response p(t)"
 
         Note over IR, InputPulse: Convolution: p(t) = h(t) * InputPulse(t)
         IR ->> PR: Used to calculate
         InputPulse ->> PR: Used to calculate
-    ```
+```
 
 ## How `com_code` Transforms and Ensures Causality
 
@@ -88,10 +88,10 @@ Let's visualize the main steps when `com_code` performs this transformation. The
 
 ```mermaid
 sequenceDiagram
-    participant MainScript as COM.m
-    participant FDtoTD as COM_FD_to_TD.m
-    participant S21toImpulse as s21_to_impulse_DC.m
-    participant ChData as chdata structure
+    participant MainScript as "COM.m"
+    participant FDtoTD as "COM_FD_to_TD.m"
+    participant S21toImpulse as "s21_to_impulse_DC.m"
+    participant ChData as "chdata structure"
 
     MainScript->>FDtoTD: Start Frequency-to-Time Domain conversion (pass chdata, param, OP)
     FDtoTD->>S21toImpulse: For each channel in chdata: call with sdd21, faxis, param.sample_dt, OP

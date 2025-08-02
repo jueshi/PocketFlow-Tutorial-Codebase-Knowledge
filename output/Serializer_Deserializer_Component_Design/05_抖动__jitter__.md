@@ -55,58 +55,39 @@ gantt
 1.  **采样错误导致误码 (Bit Errors)**：如果抖动过大，接收端的采样时钟可能会在数据尚未稳定或者已经开始向下一个比特跳变的时刻进行采样。这会导致接收器错误地判断数据值（例如，把 ‘1’ 误判为 ‘0’），从而产生误码 (Bit Error)。误码率 (BER) 是衡量通信系统可靠性的一个重要指标，高抖动通常意味着高误码率。
 2.  **减小有效数据眼图 (Eye Diagram)**：工程师常用“眼图”来评估高速信号的质量。理想情况下，眼图的“眼睛”应该张得很大很清晰，表示有足够的时间和电压余量来进行可靠采样。抖动会导致眼图在水平方向（时间轴）上闭合，使得“眼睛”变小。眼睛越小，系统对噪声和其他干扰就越敏感，采样就越困难。对于 [多电平信令 (例如 PAM-4)](02_多电平信令__例如_pam_4__.md) 来说，由于其固有的多电平特性使得垂直方向的眼高已经减小，时间上的抖动会进一步恶化信号质量，使其更难正确解码。
 
-    ```mermaid
-    graph LR
-        subgraph 无抖动时的眼图 (理想情况)
-            A1[" "] -- 高电平路径1 --> A2[" "]
-            A1_b[" "] -- 高电平路径2 --> A2_b[" "]
-            A3[" "] -- 低电平路径1 --> A4[" "]
-            A3_b[" "] -- 低电平路径2 --> A4_b[" "]
-            style A1 fill:#fff,stroke:#fff,stroke-width:0px
-            style A2 fill:#fff,stroke:#fff,stroke-width:0px
-            style A1_b fill:#fff,stroke:#fff,stroke-width:0px
-            style A2_b fill:#fff,stroke:#fff,stroke-width:0px
-            style A3 fill:#fff,stroke:#fff,stroke-width:0px
-            style A4 fill:#fff,stroke:#fff,stroke-width:0px
-            style A3_b fill:#fff,stroke:#fff,stroke-width:0px
-            style A4_b fill:#fff,stroke:#fff,stroke-width:0px
-            %% 模拟一个清晰的眼图形状
-            Path_H1( ) --- Path_H2( )
-            Path_L1( ) --- Path_L2( )
-            Path_H1 -- 上升/下降沿 --> Path_L1
-            Path_H1 -- 上升/下降沿 --> Path_L2
-            Path_H2 -- 上升/下降沿 --> Path_L1
-            Path_H2 -- 上升/下降沿 --> Path_L2
-            EyeOpenSpace["眼<br/>(采样区域)"]
-            style EyeOpenSpace fill:#lightblue,stroke:#333
-            text1["眼高<br/>(电压余量)"]
-            text2["眼宽<br/>(时间余量)"]
-            style text1 fill:#fff,stroke:#fff
-            style text2 fill:#fff,stroke:#fff
-        end
-        subgraph 有抖动时的眼图
-            B1[" "] -- 高电平模糊带 --> B2[" "]
-            B3[" "] -- 低电平模糊带 --> B4[" "]
-            style B1 fill:#fff,stroke:#fff,stroke-width:0px
-            style B2 fill:#fff,stroke:#fff,stroke-width:0px
-            style B3 fill:#fff,stroke:#fff,stroke-width:0px
-            style B4 fill:#fff,stroke:#fff,stroke-width:0px
-            %% 模拟一个因抖动而闭合的眼图
-            Path_H1_J( ) -. 抖动导致边沿不确定 .- Path_H2_J( )
-            Path_L1_J( ) -. 抖动导致边沿不确定 .- Path_L2_J( )
-            Path_H1_J -- 模糊的上升/下降沿 --> Path_L1_J
-            Path_H1_J -- 模糊的上升/下降沿 --> Path_L2_J
-            Path_H2_J -- 模糊的上升/下降沿 --> Path_L1_J
-            Path_H2_J -- 模糊的上升/下降沿 --> Path_L2_J
-            EyeClosedSpace["变小的眼<br/>(采样困难)"]
-            style EyeClosedSpace fill:pink,stroke:red
-            text3["眼高减小"]
-            text4["眼宽显著减小"]
-            style text3 fill:#fff,stroke:#fff
-            style text4 fill:#fff,stroke:#fff
-        end
-    ```
-    *图例：抖动对眼图的影响。左边是理想情况，右边是抖动导致眼图在时间和幅度上都恶化。*
+```mermaid
+graph LR
+    subgraph "无抖动时的眼图 (理想情况)"
+        A1 -- "高电平路径1" --> A2
+        A1_b -- "高电平路径2" --> A2_b
+        A3 -- "低电平路径1" --> A4
+        A3_b -- "低电平路径2" --> A4_b
+        %% 模拟一个清晰的眼图形状
+        Path_H1 --- Path_H2
+        Path_L1 --- Path_L2
+        Path_H1 -- "上升/下降沿" --> Path_L1
+        Path_H1 -- "上升/下降沿" --> Path_L2
+        Path_H2 -- "上升/下降沿" --> Path_L1
+        Path_H2 -- "上升/下降沿" --> Path_L2
+        EyeOpenSpace["眼
+        (采样区域)"]
+    end
+    subgraph "有抖动时的眼图"
+        B1 -- "高电平模糊带" --> B2
+        B3 -- "低电平模糊带" --> B4
+        %% 模拟一个因抖动而闭合的眼图
+        Path_H1_J -. "抖动导致边沿不确定" .-> Path_H2_J
+        Path_L1_J -. "抖动导致边沿不确定" .-> Path_L2_J
+        Path_H1_J -- "模糊的上升/下降沿" --> Path_L1_J
+        Path_H1_J -- "模糊的上升/下降沿" --> Path_L2_J
+        Path_H2_J -- "模糊的上升/下降沿" --> Path_L1_J
+        Path_H2_J -- "模糊的上升/下降沿" --> Path_L2_J
+        EyeClosedSpace["变小的眼
+        (采样困难)"]
+    end
+```
+
+*图例：抖动对眼图的影响。左边是理想情况，右边是抖动导致眼图在时间和幅度上都恶化。*
 
 3.  **影响 [时钟数据恢复 (CDR)](03_时钟数据恢复__cdr__.md) 的性能**：CDR 电路需要从数据流的跳变中提取时钟。如果数据跳变时刻本身就“飘忽不定”（即存在抖动），CDR 电路就更难锁定到正确的时钟频率和相位，或者即使锁定了，恢复出来的时钟也可能带有抖动，影响后续的数据采样。
 
@@ -116,13 +97,13 @@ gantt
 
 ```mermaid
 graph TD
-    TJ[总抖动 (Total Jitter, TJ)] --> RJ[随机抖动 (Random Jitter, RJ)]
-    TJ --> DJ[确定性抖动 (Deterministic Jitter, DJ)]
-    DJ --> PJ[周期性抖动 (Periodic Jitter, PJ)]
-    DJ --> DDJ[数据相关抖动 (Data-Dependent Jitter, DDJ)]
-    DJ --> BUJ[有界不相关抖动 (Bounded Uncorrelated Jitter, BUJ)]
-    DDJ --> DCD[占空比失真 (Duty Cycle Distortion, DCD)]
-    DDJ --> ISI[符号间干扰 (Inter-Symbol Interference, ISI)]
+    TJ["总抖动 (Total Jitter, TJ)"] --> RJ["随机抖动 (Random Jitter, RJ)"]
+    TJ --> DJ["确定性抖动 (Deterministic Jitter, DJ)"]
+    DJ --> PJ["周期性抖动 (Periodic Jitter, PJ)"]
+    DJ --> DDJ["数据相关抖动 (Data-Dependent Jitter, DDJ)"]
+    DJ --> BUJ["有界不相关抖动 (Bounded Uncorrelated Jitter, BUJ)"]
+    DDJ --> DCD["占空比失真 (Duty Cycle Distortion, DCD)"]
+    DDJ --> ISI["符号间干扰 (Inter-Symbol Interference, ISI)"]
 
     classDef category fill:#e6e6fa,stroke:#333,stroke-width:2px;
     class TJ,RJ,DJ,PJ,DDJ,BUJ,DCD,ISI category;
@@ -152,7 +133,7 @@ graph TD
         *   其他时钟信号或高频数字信号通过串扰 (crosstalk) 耦合到当前信号。
         *   电磁干扰 (EMI)。
     *   **影响**：PJ 会导致信号边沿相对于理想位置周期性地来回摆动，如 PDF 图 2.9 (第21页) 所示概念。
-        ```mermaid
+```mermaid
         ---
         title: 图例：周期性抖动对理想时钟的影响 (概念图)
         ---
@@ -172,7 +153,7 @@ graph TD
             实际边沿4 (晚) :crit, actual_e4, 310, 10
             %% 说明: 'crit' 只是为了标记关键时刻，'0, 10' 表示从0开始，持续10个单位的标记块
             %% 重点是边沿相对于理想位置的周期性提前或滞后
-        ```
+```
         *图解：理想时钟边沿是等间隔的，而受周期性抖动影响的时钟边沿则会围绕理想位置周期性地提前或推迟。*
 
     #### b. 数据相关抖动 (Data-Dependent Jitter, DDJ)
@@ -185,27 +166,27 @@ graph TD
                 *   信号路径中存在直流偏置 (DC offset)，如 PDF 图 2.10 (第23页) 所示，一个正的DC偏置会导致高电平时间变长，负偏置则相反。
                 *   驱动器或接收器内部的电路不对称。
             *   **影响**：DCD 会导致数据眼图在时间上不对称，压缩有效采样窗口，尤其是在时钟的上升沿和下降沿都被用来采样数据时（双边沿采样）。PDF 图 2.11 (第25页) 展示了DCD如何导致数据采样的时间裕量降低。
-                ```mermaid
+```mermaid
                 graph TD
-                    subgraph 理想信号 (50% 占空比)
-                        IdealPulse[高低电平时间相等 T_high = T_low]
-                        Time1(0) --> Time2(T/2) --> Time3(T) --> Time4(3T/2)
-                        Level1[高] --> Level2[低] --> Level3[高]
-                        Time1 -- T_high --> Time2
-                        Time2 -- T_low --> Time3
-                        Time3 -- T_high --> Time4
+                    subgraph "理想信号 (50% 占空比)"
+                        IdealPulse["高低电平时间相等 T_high = T_low"]
+                        Time1("0") --> Time2("T/2") --> Time3("T") --> Time4("3T/2")
+                        Level1["高"] --> Level2["低"] --> Level3["高"]
+                        Time1 -- "T_high" --> Time2
+                        Time2 -- "T_low" --> Time3
+                        Time3 -- "T_high" --> Time4
                     end
-                    subgraph 有DCD的信号 (例如高电平时间 > 低电平时间)
-                        DCDPulse[高电平时间 > 低电平时间 T_high' > T_low']
-                        Time1_d(0) --> Time2_d(T_high') --> Time3_d(T_high'+T_low') --> Time4_d(2T_high'+T_low')
-                        Level1_d[高] --> Level2_d[低] --> Level3_d[高]
-                        Time1_d -- T_high' (更长) --> Time2_d
-                        Time2_d -- T_low' (更短) --> Time3_d
-                        Time3_d -- T_high' (更长) --> Time4_d
+                    subgraph "有DCD的信号 (例如高电平时间 > 低电平时间)"
+                        DCDPulse["高电平时间 > 低电平时间 T_high' > T_low'"]
+                        Time1_d("0") --> Time2_d("T_high'") --> Time3_d("T_high'+T_low'") --> Time4_d("2T_high'+T_low'")
+                        Level1_d["高"] --> Level2_d["低"] --> Level3_d["高"]
+                        Time1_d -- "T_high' (更长)" --> Time2_d
+                        Time2_d -- "T_low' (更短)" --> Time3_d
+                        Time3_d -- "T_high' (更长)" --> Time4_d
                     end
                     linkStyle 0 stroke-width:0px,fill:none;
                     linkStyle 4 stroke-width:0px,fill:none;
-                ```
+```
                 *图解：占空比失真 (DCD) 导致高电平脉冲宽度和低电平脉冲宽度不再相等。*
 
         *   **符号间干扰 (Inter-Symbol Interference, ISI)**：

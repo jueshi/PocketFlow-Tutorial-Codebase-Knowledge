@@ -117,12 +117,12 @@ print(f"'爱' 的嵌入向量: {embedding_ai}")
 
 ```mermaid
 sequenceDiagram
-    participant DecOut as 解码器最终隐藏状态
-    participant Linear as 线性层 (输出维度=词汇表大小)
-    participant Logits as 原始分数 (Logits)
-    participant Softmax as Softmax 函数
-    participant Probs as 概率分布
-    participant Prediction as 预测的下一个词
+    participant DecOut as "解码器最终隐藏状态"
+    participant Linear as "线性层 (输出维度=词汇表大小)"
+    participant Logits as "原始分数 (Logits)"
+    participant Softmax as "Softmax 函数"
+    participant Probs as "概率分布"
+    participant Prediction as "预测的下一个词"
 
     DecOut-->>Linear: 输入解码器状态向量 (例如512维)
     Linear-->>Logits: 输出每个词的原始分数 (例如30000维)

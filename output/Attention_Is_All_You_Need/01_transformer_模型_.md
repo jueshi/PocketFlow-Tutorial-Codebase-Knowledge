@@ -69,9 +69,9 @@ graph LR
 
 ```mermaid
 sequenceDiagram
-    participant 用户 as 用户
-    participant Transformer模型 as Transformer 模型
-    participant 翻译结果 as 翻译结果
+    participant 用户 as "用户"
+    participant Transformer模型 as "Transformer 模型"
+    participant 翻译结果 as "翻译结果"
 
     用户->>Transformer模型: 输入中文句子 ("今天天气真好")
     activate Transformer模型

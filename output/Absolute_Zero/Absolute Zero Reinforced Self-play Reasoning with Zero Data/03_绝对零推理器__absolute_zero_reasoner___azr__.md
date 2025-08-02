@@ -55,9 +55,9 @@ AZR 作为一个系统，其运作依赖于几个关键的理念和机制：
 
 ```mermaid
 sequenceDiagram
-    participant AZR_Proposer as AZR (提议者角色 π提议θ)
-    participant AZR_Solver as AZR (解决者角色 π解决θ)
-    participant CodeExecutor as 代码执行器 (环境 e)
+    participant AZR_Proposer as "AZR (提议者角色 π提议θ)"
+    participant AZR_Solver as "AZR (解决者角色 π解决θ)"
+    participant CodeExecutor as "代码执行器 (环境 e)"
 
     Note over AZR_Proposer, CodeExecutor: 学习循环开始
     AZR_Proposer->>CodeExecutor: 提议一个新任务 τ <br> (例如：生成一个程序框架和输入)
@@ -69,7 +69,6 @@ sequenceDiagram
     
     AZR_Solver->>AZR_Proposer: (内部更新) 根据 r_propose 和 r_solve <br> 更新共享的模型参数 θ, <br> 提升提议和解决任务的能力
     Note over AZR_Proposer, CodeExecutor: 循环往复，不断进化
-
 ```
 
 **逐步解析：**

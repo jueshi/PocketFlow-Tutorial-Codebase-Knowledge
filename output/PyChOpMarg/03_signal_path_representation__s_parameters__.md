@@ -98,10 +98,10 @@ Here’s a simplified diagram of the process:
 ```mermaid
 sequenceDiagram
     participant User
-    participant COM_Init as COM.__init__
-    participant Utils as PyChOpMarg Utilities (sparams.py, filter.py)
-    participant skrf as scikit-rf Library
-    participant H21_Calc as calc_H21 function
+    participant COM_Init as "COM.__init__"
+    participant Utils as "PyChOpMarg Utilities (sparams.py, filter.py)"
+    participant skrf as "scikit-rf Library"
+    participant H21_Calc as "calc_H21 function"
 
     User->>COM_Init: COM(params, channel_files)
     COM_Init->>Utils: Process channel files (e.g., read .s4p)

@@ -21,11 +21,11 @@
 
 ```mermaid
 graph TD
-    subgraph CompanyA[A公司产品]
+    subgraph "CompanyA[A公司产品]"
         A_Module[光模块<br>遵循标准X]
     end
     
-    subgraph CompanyB[B公司产品]
+    subgraph "CompanyB[B公司产品]"
         B_Switch[交换机<br>遵循标准X]
     end
 
@@ -34,7 +34,6 @@ graph TD
     Note[因为都遵循了相同的标准X<br>所以可以互操作!]
     
     A_Module --- Note
-
 ```
 *图4.1: 标准确保不同厂商设备间的互操作性*
 
@@ -117,7 +116,7 @@ graph LR
     PCBTrace --> Connector[连接器]
     Connector --> Module[光模块电接口]
 
-    subgraph Standards[OIF CEI 标准关注点]
+    subgraph "Standards[OIF CEI 标准关注点]"
         direction LR
         P1[电压]
         P2[抖动]
@@ -141,7 +140,6 @@ graph LR
     Note[标准规定了从芯片输出到模块输入<br>整个路径上的电气特性和性能指标]
     
     PCBTrace --- Note
-
 ```
 *图4.2: 电气接口标准化的关键方面*
 
@@ -166,7 +164,7 @@ graph TD
     Transmitter[光发送器<br>内部有激光器和调制器] -- 光信号 --> Fiber[光纤]
     Fiber --> Receiver[光接收器<br>内部有光电探测器]
 
-    subgraph Standards[IEEE 标准关注点]
+    subgraph "Standards[IEEE 标准关注点]"
         direction LR
         O1[波长]
         O2[光功率]
@@ -189,7 +187,6 @@ graph TD
     Note[IEEE标准规定了光信号的特性<br>使用的光纤类型以及能达到的传输距离等]
     
     Fiber --- Note
-
 ```
 *图4.3: 光接口标准化的关键方面*
 
@@ -218,10 +215,10 @@ IEEE 802.3 还定义了：
 
 ```mermaid
 sequenceDiagram
-    participant Industry as 行业需求
-    participant SDO as 标准组织 (IEEE/OIF)
-    participant WG as 工作组 (专家们)
-    participant Companies as 成员公司
+    participant Industry as "行业需求"
+    participant SDO as "标准组织 (IEEE/OIF)"
+    participant WG as "工作组 (专家们)"
+    participant Companies as "成员公司"
 
     Industry->>SDO: 出现新技术/新需求 (如更高带宽)
     SDO->>WG: 成立研究/工作组

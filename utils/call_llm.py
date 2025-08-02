@@ -3,6 +3,9 @@ import os
 import logging
 import json
 from datetime import datetime
+import time
+import random
+import hashlib
 
 # Configure logging
 log_directory = os.getenv("LOG_DIR", "logs")
@@ -13,7 +16,7 @@ log_file = os.path.join(log_directory, f"llm_calls_{datetime.now().strftime('%Y%
 logger = logging.getLogger("llm_logger")
 logger.setLevel(logging.INFO)
 logger.propagate = False  # Prevent propagation to root logger
-file_handler = logging.FileHandler(log_file)
+file_handler = logging.FileHandler(log_file, encoding='utf-8')
 file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 logger.addHandler(file_handler)
 
@@ -27,57 +30,90 @@ def call_llm(prompt: str, use_cache: bool = True) -> str:
     
     # Check cache if enabled
     if use_cache:
+        # Use hash for prompt to avoid issues with very long prompts as dictionary keys
+        prompt_hash = hashlib.md5(prompt.encode('utf-8')).hexdigest()
+        
         # Load cache from disk
         cache = {}
         if os.path.exists(cache_file):
             try:
-                with open(cache_file, 'r') as f:
+                with open(cache_file, 'r', encoding='utf-8') as f:
                     cache = json.load(f)
-            except:
-                logger.warning(f"Failed to load cache, starting with empty cache")
+            except Exception as e:
+                logger.warning(f"Failed to load cache: {e}, starting with empty cache")
         
         # Return from cache if exists
-        if prompt in cache:
-            logger.info(f"RESPONSE: {cache[prompt]}")
-            return cache[prompt]
+        if prompt_hash in cache:
+            logger.info(f"CACHE HIT: Using cached response for prompt hash {prompt_hash[:8]}...")
+            return cache[prompt_hash]
     
     # Call the LLM if not in cache or cache disabled
-    client = genai.Client(
-        vertexai=True, 
-        # TODO: change to your own project id and location
-        project=os.getenv("GEMINI_PROJECT_ID", "your-project-id"),
-        location=os.getenv("GEMINI_LOCATION", "us-central1")
-    )
-    # You can comment the previous line and use the AI Studio key instead:
     # client = genai.Client(
-    #     api_key=os.getenv("GEMINI_API_KEY", "your-api_key"),
+    #     vertexai=True, 
+    #     # TODO: change to your own project id and location
+    #     project=os.getenv("GEMINI_PROJECT_ID", "gen-lang-client-0344231282"),
+    #     location=os.getenv("GEMINI_LOCATION", "us-central1")
     # )
-    model = os.getenv("GEMINI_MODEL", "gemini-2.5-pro-exp-03-25")
-    response = client.models.generate_content(
-        model=model,
-        contents=[prompt]
+    # You can comment the previous line and use the AI Studio key instead:
+    client = genai.Client(
+        # api_key=os.getenv("GEMINI_API_KEY", "AIzaSyABRTy0lZ1dysdKkOv0YHPqnuKvmnQk4Ik"), #
+        api_key=os.getenv("GEMINI_API_KEY", "AIzaSyBqJeaGBwqjSwQnEwVuKK3xa0ux8h1CgLU"), #
     )
-    response_text = response.text
+    # model = os.getenv("GEMINI_MODEL", "gemini-2.5-pro-exp-03-25")
+    model = os.getenv("GEMINI_MODEL", "gemini-2.5-pro-preview-05-06") #gemini-2.5-pro-exp-03-25
+    
+    # Add retry logic with exponential backoff for API rate limiting
+    max_retries = 5
+    base_delay = 2  # starting delay in seconds
+    
+    for retry_count in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=[prompt]
+            )
+            response_text = response.text
+            break  # Success, exit retry loop
+        except Exception as e:
+            # Check if it's a rate limit error
+            if "429" in str(e) or "rate limit" in str(e).lower():
+                # Calculate delay with exponential backoff and jitter
+                delay = base_delay * (2 ** retry_count) + random.uniform(0, 1)
+                logger.warning(f"Rate limit hit, retrying in {delay:.2f} seconds (attempt {retry_count+1}/{max_retries})")
+                
+                # If this is the last retry, raise the exception
+                if retry_count == max_retries - 1:
+                    logger.error(f"Max retries reached, giving up: {e}")
+                    raise
+                    
+                time.sleep(delay)
+            else:
+                # Not a rate limit error, raise immediately
+                logger.error(f"API error: {e}")
+                raise
     
     # Log the response
     logger.info(f"RESPONSE: {response_text}")
     
     # Update cache if enabled
     if use_cache:
+        # Use hash for prompt to avoid issues with very long prompts as dictionary keys
+        prompt_hash = hashlib.md5(prompt.encode('utf-8')).hexdigest()
+        
         # Load cache again to avoid overwrites
         cache = {}
         if os.path.exists(cache_file):
             try:
-                with open(cache_file, 'r') as f:
+                with open(cache_file, 'r', encoding='utf-8') as f:
                     cache = json.load(f)
-            except:
-                pass
+            except Exception as e:
+                logger.warning(f"Failed to load cache for saving: {e}")
         
         # Add to cache and save
-        cache[prompt] = response_text
+        cache[prompt_hash] = response_text
         try:
-            with open(cache_file, 'w') as f:
-                json.dump(cache, f)
+            with open(cache_file, 'w', encoding='utf-8') as f:
+                json.dump(cache, f, ensure_ascii=False, indent=2)
         except Exception as e:
             logger.error(f"Failed to save cache: {e}")
     

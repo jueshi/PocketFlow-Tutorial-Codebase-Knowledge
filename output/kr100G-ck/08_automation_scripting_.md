@@ -133,8 +133,8 @@ The automation script itself doesn't perform the complex analysis. It acts like 
 
 ```mermaid
 sequenceDiagram
-    participant Script as Automation Script
-    participant COM_FW as COM Execution Framework
+    participant Script as "Automation Script"
+    participant COM_FW as "COM Execution Framework"
     participant Results
 
     Script->>Script: Start Loops (Configs, Lanes)

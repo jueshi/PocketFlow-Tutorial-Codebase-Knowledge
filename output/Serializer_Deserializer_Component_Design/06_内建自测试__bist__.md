@@ -27,15 +27,15 @@
 
 ```mermaid
 graph TD
-    subgraph 芯片内部 (On-Chip)
-        TPG[测试模式/信号生成器 (TPG)] --> DUT[被测电路 (DUT)]
-        DUT --> ORA[输出响应分析器 (ORA)]
-        TC[测试控制器 (TC)] --> TPG
+    subgraph "芯片内部 (On-Chip)"
+        TPG["测试模式/信号生成器 (TPG)"] --> DUT["被测电路 (DUT)"]
+        DUT --> ORA["输出响应分析器 (ORA)"]
+        TC["测试控制器 (TC)"] --> TPG
         TC --> ORA
         TC --> DUT
-        ORA -- 测试结果 (通过/失败 或 测量数据) --> Output_Interface[输出接口 (例如 JTAG, 简单总线)]
+        ORA -- "测试结果 (通过/失败 或 测量数据)" --> Output_Interface["输出接口 (例如 JTAG, 简单总线)"]
     end
-    Output_Interface --> External_System[外部系统/ATE (读取结果)]
+    Output_Interface --> External_System["外部系统/ATE (读取结果)"]
 
     classDef bist_component fill:#lightyellow,stroke:#333,stroke-width:2px;
     class TPG,ORA,TC,DUT,Output_Interface bist_component;
@@ -77,18 +77,18 @@ graph TD
 
 ```mermaid
 graph TD
-    subgraph 芯片内部BIST模块 (On-Chip BIST Module)
-        InputSignal[被测信号 (例如 恢复时钟)] --> SamplingFFs[采样触发器阵列]
-        PLL_Controller[PLL 控制器] --> Internal_PLLs[内部多个PLLs]
-        Internal_PLLs -- 精密采样时钟 (欠采样) --> SamplingFFs
-        SamplingFFs -- 采样数据 --> CounterLogic[计数器逻辑 (测量脉宽/偏移)]
-        CounterLogic -- 测量值 (例如 周期偏移) --> RAM[存储器 (RAM)]
-        BIST_Ctrl[BIST 控制器 (状态机)] --> PLL_Controller
+    subgraph "芯片内部BIST模块 (On-Chip BIST Module)"
+        InputSignal["被测信号 (例如 恢复时钟)"] --> SamplingFFs["采样触发器阵列"]
+        PLL_Controller["PLL 控制器"] --> Internal_PLLs["内部多个PLLs"]
+        Internal_PLLs -- "精密采样时钟 (欠采样)" --> SamplingFFs
+        SamplingFFs -- "采样数据" --> CounterLogic["计数器逻辑 (测量脉宽/偏移)"]
+        CounterLogic -- "测量值 (例如 周期偏移)" --> RAM["存储器 (RAM)"]
+        BIST_Ctrl["BIST 控制器 (状态机)"] --> PLL_Controller
         BIST_Ctrl --> CounterLogic
         BIST_Ctrl --> RAM
-        RAM -- 存储的数据 --> Output_Interface[输出接口 (如UART/JTAG)]
+        RAM -- "存储的数据" --> Output_Interface["输出接口 (如UART/JTAG)"]
     end
-    Output_Interface --> ExternalHost[外部主机 (用于数据处理和直方图生成)]
+    Output_Interface --> ExternalHost["外部主机 (用于数据处理和直方图生成)"]
 
     classDef component fill:#lightgreen,stroke:#333,stroke-width:2px;
     class InputSignal,Internal_PLLs,SamplingFFs,CounterLogic,RAM,BIST_Ctrl,PLL_Controller,Output_Interface component;
@@ -118,13 +118,13 @@ graph TD
 
 ```mermaid
 sequenceDiagram
-    participant 用户_或_系统 as 用户/片外系统
-    participant BIST_控制器 as BIST 控制器
-    participant 内部_PLLs as 内部 PLLs
-    participant 被测信号 as 被测信号 (例如 时钟)
-    participant 采样和计数逻辑 as 采样与计数逻辑
-    participant 片上RAM as 片上 RAM
-    participant 主机处理器 as 主机处理器 (通过UART)
+    participant 用户_或_系统 as "用户/片外系统"
+    participant BIST_控制器 as "BIST 控制器"
+    participant 内部_PLLs as "内部 PLLs"
+    participant 被测信号 as "被测信号 (例如 时钟)"
+    participant 采样和计数逻辑 as "采样与计数逻辑"
+    participant 片上RAM as "片上 RAM"
+    participant 主机处理器 as "主机处理器 (通过UART)"
 
     用户_或_系统->>BIST_控制器: 启动 BIST 测试
     BIST_控制器->>内部_PLLs: 配置 PLL (用于欠采样)

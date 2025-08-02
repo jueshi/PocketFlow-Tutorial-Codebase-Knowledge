@@ -50,12 +50,12 @@ The primary workhorse for this optimization is the `optimize_fom.m` script. It t
 
 ```mermaid
 sequenceDiagram
-    participant MainCOM as COM.m
-    participant OptLoop as optimize_fom.m
+    participant MainCOM as "COM.m"
+    participant OptLoop as "optimize_fom.m"
     participant ApplyEQ as "Apply_EQ (Ch 4)"
     participant GetSampleTime as "cursor_sample_index.m"
     participant NoiseCalc as "Simplified Noise/FOM Calc (in optimize_fom)"
-    participant BestSettings as fom_result (stores best settings)
+    participant BestSettings as "fom_result (stores best settings)"
 
     MainCOM->>OptLoop: Start Optimization (pass chdata, param, OP)
     loop For each CTLE setting

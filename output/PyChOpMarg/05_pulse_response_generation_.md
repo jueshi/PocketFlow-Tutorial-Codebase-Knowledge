@@ -95,10 +95,10 @@ Here's a simplified diagram of this flow:
 
 ```mermaid
 sequenceDiagram
-    participant COM_Instance as COM Calculation Method (e.g., calc_fom)
-    participant H_Calc as Calculate H(f) (e.g., COM.H)
-    participant PR_Func as Pulse Response Function (COM.pulse_resp)
-    participant NumPyFFT as numpy.fft
+    participant COM_Instance as "COM Calculation Method (e.g., calc_fom)"
+    participant H_Calc as "Calculate H(f) (e.g., COM.H)"
+    participant PR_Func as "Pulse Response Function (COM.pulse_resp)"
+    participant NumPyFFT as "numpy.fft"
 
     COM_Instance->>H_Calc: Calculate total H(f) for current EQ settings
     H_Calc-->>COM_Instance: Returns total H(f)

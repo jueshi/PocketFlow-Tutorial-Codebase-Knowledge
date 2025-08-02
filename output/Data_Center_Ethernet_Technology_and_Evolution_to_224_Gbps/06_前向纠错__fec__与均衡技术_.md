@@ -41,7 +41,6 @@ graph TD
 
     %% 模拟信号波形示意
     %% 实际画图比较困难，用文字描述变化
-
 ```
 *图6.1: 信号在传输过程中的失真与噪声示意*
 
@@ -85,7 +84,6 @@ graph TD
         FECD --> CorrectedData["纠正后的数据
         (如果错误在纠错能力范围内)"]
     end
-
 ```
 *图6.2: 前向纠错 (FEC) 工作流程示意图*
 
@@ -155,7 +153,6 @@ graph TD
     style EyeDiagram_Open fill:#dfd,stroke:#0f0
 
     %% 简单示意，实际眼图更复杂
-
 ```
 *图6.3: 均衡技术对PAM4眼图的改善效果示意图*
 
@@ -202,11 +199,11 @@ FEC和均衡技术并不是孤立工作的，它们更像是一对“黄金搭�
 
 ```mermaid
 sequenceDiagram
-    participant Sender as 发送端
-    participant Channel as 传输通道 (引入失真/噪声)
-    participant Equalizer as 均衡器 (在接收端DSP中)
-    participant FEC_Decoder as FEC解码器 (在接收端DSP中)
-    participant UserData as 最终用户数据
+    participant Sender as "发送端"
+    participant Channel as "传输通道 (引入失真/噪声)"
+    participant Equalizer as "均衡器 (在接收端DSP中)"
+    participant FEC_Decoder as "FEC解码器 (在接收端DSP中)"
+    participant UserData as "最终用户数据"
 
     Sender->>Channel: 发送FEC编码的数据
     Channel->>Equalizer: 接收到失真的信号

@@ -36,11 +36,11 @@
 
 ```mermaid
 graph LR
-    subgraph 串行器 (Serializer)
-        P_In1[并行数据输入 A] --> MUX
-        P_In2[并行数据输入 B] --> MUX
-        P_InN[并行数据输入 ...] --> MUX
-        MUX[并行转串行模块 PISO] -- 发送时钟驱动 --> S_Out[串行数据输出 (A, B, ...)]
+    subgraph "串行器 (Serializer)"
+        P_In1["并行数据输入 A"] --> MUX
+        P_In2["并行数据输入 B"] --> MUX
+        P_InN["并行数据输入 ..."] --> MUX
+        MUX["并行转串行模块 PISO"] -- "发送时钟驱动" --> S_Out["串行数据输出 (A, B, ...)"] 
     end
 ```
 上图简单展示了串行器的概念：多个并行数据线进入一个“并行转串行模块”（通常基于移位寄存器 PISO），然后输出单条串行数据线。
@@ -55,11 +55,11 @@ graph LR
 
 ```mermaid
 graph LR
-    subgraph 解串器 (Deserializer)
-        S_In[串行数据输入 (A, B, ...)] -- 接收时钟驱动 --> DEMUX[串行转并行模块 SIPO]
-        DEMUX --> P_Out1[并行数据输出 A]
-        DEMUX --> P_Out2[并行数据输出 B]
-        DEMUX --> P_OutN[并行数据输出 ...]
+    subgraph "解串器 (Deserializer)"
+        S_In["串行数据输入 (A, B, ...)"] -- "接收时钟驱动" --> DEMUX["串行转并行模块 SIPO"]
+        DEMUX --> P_Out1["并行数据输出 A"]
+        DEMUX --> P_Out2["并行数据输出 B"]
+        DEMUX --> P_OutN["并行数据输出 ..."]
     end
 ```
 上图简单展示了解串器的概念：单条串行数据线进入一个“串行转并行模块”（通常基于移位寄存器 SIPO），然后恢复成多条并行数据线。
@@ -70,11 +70,11 @@ graph LR
 
 ```mermaid
 sequenceDiagram
-    participant X_Parallel as 组件X (并行数据源)
-    participant Serializer as 串行器 (在X端)
-    participant Channel as 高速传输通道
-    participant Deserializer as 解串器 (在Y端)
-    participant Y_Parallel as 组件Y (并行数据目标)
+    participant X_Parallel as "组件X (并行数据源)"
+    participant Serializer as "串行器 (在X端)"
+    participant Channel as "高速传输通道"
+    participant Deserializer as "解串器 (在Y端)"
+    participant Y_Parallel as "组件Y (并行数据目标)"
 
     X_Parallel->>Serializer: 16位并行数据
     Serializer->>Serializer: 将16位数据一位一位排列

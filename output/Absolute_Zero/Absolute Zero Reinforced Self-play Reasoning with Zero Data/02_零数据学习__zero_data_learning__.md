@@ -72,12 +72,12 @@ def f(x):
 
 ```mermaid
 graph TD
-    subgraph 传统学习范式
+    subgraph "传统学习范式"
         A["监督学习<br>(Supervised Learning)"] -- 依赖 --> D1["大量人工<br>标注数据"]
         B["传统强化学习<br>(RL with Verified Rewards)"] -- 依赖 --> D2["专家定义<br>的问题与答案集"]
     end
 
-    subgraph 绝对零范式中的零数据学习
+    subgraph "绝对零范式中的零数据学习"
         C["绝对零模型<br>(Absolute Zero Model)"] -- 通过 --> E["自我提议任务"]
         E -- 并 --> F["自我解决任务"]
         F -- 与 --> G["环境<br>(如代码执行器)"]
@@ -89,7 +89,6 @@ graph TD
     style A fill:#f9f,stroke:#333,stroke-width:2px
     style B fill:#f9f,stroke:#333,stroke-width:2px
     style C fill:#9cf,stroke:#333,stroke-width:2px
-
 ```
 在这个图中，我们可以清晰地看到，绝对零范式下的模型通过内部的自我提议和解决循环，并与环境互动来学习，从而摆脱了对外部预置数据集的依赖。这正是零数据学习的核心思想。
 

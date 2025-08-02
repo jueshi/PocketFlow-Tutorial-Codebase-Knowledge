@@ -153,7 +153,7 @@ Metric extraction isn't usually a complex calculation itself; it's primarily abo
 ```mermaid
 sequenceDiagram
     participant User Script
-    participant COM_Framework as COM Execution Framework
+    participant COM_Framework as "COM Execution Framework"
     participant Results1_Struct
     participant Results2_Struct
 

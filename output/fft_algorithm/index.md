@@ -1,4 +1,4 @@
-# Tutorial: tmp4anpk_vy
+# Tutorial: fft_algorithm
 
 This project explains the **Fast Fourier Transform (FFT)**, which is a highly *efficient algorithm* for calculating the **Discrete Fourier Transform (DFT)**.
 The DFT converts a signal, like an audio wave or an image, from its original domain (e.g., time or space) into its constituent *frequency components*.

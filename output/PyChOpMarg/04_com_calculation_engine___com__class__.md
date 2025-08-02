@@ -98,9 +98,9 @@ Here's a simplified sequence diagram showing the flow when you call the `COM` ob
 ```mermaid
 sequenceDiagram
     participant User
-    participant COM_Instance as com_calculator()
-    participant OptEq as Optimization (opt_eq)
-    participant NoiseCalc as Noise Calculation (calc_noise)
+    participant COM_Instance as "com_calculator()"
+    participant OptEq as "Optimization (opt_eq)"
+    participant NoiseCalc as "Noise Calculation (calc_noise)"
 
     User->>COM_Instance: Calls com_calculator()
     COM_Instance->>OptEq: Perform Equalizer Optimization (find best Tx FFE, CTLE settings)

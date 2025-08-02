@@ -47,7 +47,7 @@ How do we describe something random or uncertain like noise? We use a **Probabil
 
 ```mermaid
 graph LR
-    subgraph PDF_Example["PDF for a Noise Source"]
+    subgraph "PDF_Example["PDF for a Noise Source"]"
         direction LR
         A[Low Error Voltage] --> B(High Probability)
         C[High Error Voltage] --> D(Low Probability)
@@ -102,12 +102,12 @@ Let's visualize the process:
 
 ```mermaid
 sequenceDiagram
-    participant COM_Main as Main COM Script
-    participant CreateNoisePDF as Create_Noise_PDF.m
+    participant COM_Main as "Main COM Script"
+    participant CreateNoisePDF as "Create_Noise_PDF.m"
     participant GetInterferencePDF as "get_pdf.m / get_pdf_from_sampled_signal.m"
-    participant NoiseModeler as normal_dist.m
-    participant QuantNoise as adjust_Rx_noise_for_quantization.m
-    participant Convolver as conv_fct.m
+    participant NoiseModeler as "normal_dist.m"
+    participant QuantNoise as "adjust_Rx_noise_for_quantization.m"
+    participant Convolver as "conv_fct.m"
     participant FinalResult as "Total PDF & CDF Output"
 
     COM_Main->>CreateNoisePDF: Start analysis (pass chdata, fom_result, param, OP)

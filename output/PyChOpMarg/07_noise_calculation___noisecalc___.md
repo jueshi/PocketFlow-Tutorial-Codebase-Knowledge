@@ -97,11 +97,11 @@ Here's a simplified sequence diagram:
 
 ```mermaid
 sequenceDiagram
-    participant COM_Call as com_calculator()
-    participant OptEq as COM.opt_eq()
-    participant CalcNoise as COM.calc_noise()
-    participant GenPR as COM.gen_pulse_resps()
-    participant PMF_Utils as Probability Utilities (delta_pmf, etc.)
+    participant COM_Call as "com_calculator()"
+    participant OptEq as "COM.opt_eq()"
+    participant CalcNoise as "COM.calc_noise()"
+    participant GenPR as "COM.gen_pulse_resps()"
+    participant PMF_Utils as "Probability Utilities (delta_pmf, etc.)"
 
     COM_Call->>OptEq: Find best EQ settings (Ch 6)
     OptEq-->>COM_Call: Store optimal settings (self.tx_ix, self.gDC, etc.)

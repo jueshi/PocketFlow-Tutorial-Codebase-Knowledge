@@ -14,10 +14,10 @@ This spreading is a major problem. If one pulse spreads too much, its "tail" can
 
 ```mermaid
 graph LR
-    subgraph Before Channel
+    subgraph "Before Channel"
         A[Sharp Pulse 1] --> B(Sharp Pulse 0)
     end
-    subgraph After Channel (Distorted)
+    subgraph "After Channel (Distorted)"
         C[Blurred & Weakened Pulse 1] --> D(Blurred & Weakened Pulse 0 with ISI)
     end
     A --> C
@@ -85,11 +85,11 @@ Let's see a simplified flow:
 
 ```mermaid
 sequenceDiagram
-    participant MainScript as COM.m
+    participant MainScript as "COM.m"
     participant Optimizer as "Optimization (Ch 6)"
-    participant ApplyEQ as Apply_EQ.m
-    participant ChData as chdata structure
-    participant FOMResult as fom_result structure
+    participant ApplyEQ as "Apply_EQ.m"
+    participant ChData as "chdata structure"
+    participant FOMResult as "fom_result structure"
 
     Optimizer->>FOMResult: Optimal EQ settings (CTLE choice, FFE taps, DFE taps)
     MainScript->>ApplyEQ: Call with param, fom_result, chdata, OP

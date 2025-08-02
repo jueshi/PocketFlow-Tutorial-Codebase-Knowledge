@@ -113,8 +113,8 @@ def add(a, b):
 
 ```mermaid
 sequenceDiagram
-    participant AZR_Model as AZR 模型 (πθ)
-    participant Code_Executor as 代码执行器 (环境 e)
+    participant AZR_Model as "AZR 模型 (πθ)"
+    participant Code_Executor as "代码执行器 (环境 e)"
 
     Note over AZR_Model, Code_Executor: 提议阶段
     AZR_Model->>Code_Executor: 提议任务 τ (例如：程序设想 p_idea, 示例输入 i_example)
@@ -129,7 +129,6 @@ sequenceDiagram
     Code_Executor-->>AZR_Model: 返回解答奖励 r_solve (基于比较结果)
 
     AZR_Model->>AZR_Model: 根据 r_propose 和 r_solve 更新模型参数 θ
-
 ```
 在这个流程中，代码执行器不仅是答案的裁判，也是任务质量的间接评估者。它的存在使得整个学习过程能够在一个客观、可信的基础上进行，即使没有任何人工标注的数据。
 

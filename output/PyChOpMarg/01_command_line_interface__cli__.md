@@ -119,12 +119,12 @@ Here's a simplified diagram showing the flow for `pychopmarg convert-notebook my
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant T as Terminal
-    participant P as PyChOpMarg (cli.py)
-    participant C as Click Library
-    participant F as convert_notebook() func
-    participant J as Jupyter Utilities (jupyter.py)
+    participant U as "User"
+    participant T as "Terminal"
+    participant P as "PyChOpMarg (cli.py)"
+    participant C as "Click Library"
+    participant F as "convert_notebook() func"
+    participant J as "Jupyter Utilities (jupyter.py)"
 
     U->>T: types `pychopmarg convert-notebook my_analysis.ipynb`
     T->>P: Executes PyChOpMarg entry point

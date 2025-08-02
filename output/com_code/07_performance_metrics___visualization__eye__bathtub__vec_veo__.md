@@ -33,7 +33,7 @@ Let's explore the main tools `com_code` provides for visualizing and quantifying
 
 ```mermaid
 graph LR
-    subgraph EyeDiagram ["Typical Eye Diagram (NRZ)"]
+    subgraph "EyeDiagram ["Typical Eye Diagram (NRZ)"]"
         direction LR
         A[High Level ('1')]
         B[Low Level ('0')]
@@ -63,7 +63,7 @@ graph LR
 
 ```mermaid
 graph LR
-    subgraph BathtubCurvePlot ["Bathtub Curve"]
+    subgraph "BathtubCurvePlot ["Bathtub Curve"]"
         YAxis[BER (log scale)] --> PlotArea
         XAxis[Decision Threshold Voltage] --> PlotArea
         PlotArea -- "Curve" --> TargetBERLine["--- Target BER ---"]
@@ -95,10 +95,10 @@ Let's look at how these performance indicators are generated, using the results 
 
 ```mermaid
 sequenceDiagram
-    participant MainScript as COM.m / COM_Report.m
-    participant BathtubPlotter as Bathtub_Contribution_Wrapper.m
-    participant EyeGenerator as COM_eye_width.m
-    participant DataStore as (fom_result, Noise_Struct, chdata, param)
+    participant MainScript as "COM.m / COM_Report.m"
+    participant BathtubPlotter as "Bathtub_Contribution_Wrapper.m"
+    participant EyeGenerator as "COM_eye_width.m"
+    participant DataStore as "(fom_result, Noise_Struct, chdata, param)"
     participant PlotDisplay
 
     MainScript->>DataStore: Retrieve fom_result, Noise_Struct, chdata, param

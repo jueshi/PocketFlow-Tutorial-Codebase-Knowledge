@@ -154,13 +154,13 @@ SDAII中的PLL设置界面大致如下 (概念图，实际界面请参考软件)
 2.  **PLL 的反馈环路**:
     手册第15页的图 "Clock Recovery Implementation Using a PLL" 清晰地展示了这个反馈控制环路。我们可以把它简化理解为：
 
-    ```mermaid
+```mermaid
     sequenceDiagram
-        participant 数据边沿时间 as 输入数据流
-        participant 比较器 as 相位比较
-        participant 滤波器 as 环路滤波器 (PLL特性)
-        participant 时钟周期调整 as 内部时钟生成
-        participant 恢复时钟 as 输出
+        participant 数据边沿时间 as "输入数据流"
+        participant 比较器 as "相位比较"
+        participant 滤波器 as "环路滤波器 (PLL特性)"
+        participant 时钟周期调整 as "内部时钟生成"
+        participant 恢复时钟 as "输出"
 
         数据边沿时间-->>比较器: 提供下一个数据边沿的实际到达时间 (tk_data)
         内部时钟生成-->>比较器: 预测下一个时钟边沿的期望到达时间 (tk_clock)
@@ -171,7 +171,7 @@ SDAII中的PLL设置界面大致如下 (概念图，实际界面请参考软件)
         时钟周期调整->>内部时钟生成: 调整下一个时钟周期的长度
         内部时钟生成-->>恢复时钟: 输出同步的恢复时钟
         Note right of 恢复时钟: 此恢复时钟用于后续分析，<br>并反馈用于下一次比较。
-    ```
+```
 
     *   **比较器**: 将“测量到的下一个数据边沿时间”与“恢复时钟预测的下一个边沿时间”进行比较。
     *   **误差 (Error `xk`)**: 两者的时间差就是相位误差。
